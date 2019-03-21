@@ -1,0 +1,7 @@
+This sample automation workflow implements a controller model that can start-up and shutdown applicications by tier.
+
+This application can be used in an Azure Automation Account to start and stop applications that use virtual machines and virtual machine scale sets.
+There are two tags that are used, one for setting a start tier value and the second to set a shutdown tier value.  The controllers will start VMs and VM scale sets in order from the lowest value to highest, starting at a value of zero.  The shutdown controller will shutdown resources from highest tier value to the lowest.
+
+The default tag names are autoStart and autoShutdown but can be varied by passing in the name you want to use as a parameter.
+
