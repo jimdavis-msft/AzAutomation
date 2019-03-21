@@ -18,7 +18,7 @@ $context = Get-AzureRmContext
 
 if($null -eq $context)
 {
-	Write-Output "Creating credentials for cloud account."
+    Write-Output "Creating credentials for cloud account."
     $cred = Get-Credential
     $result = Login-AzureRmAccount -Credential $cred
     $context = Get-AzureRmContext
