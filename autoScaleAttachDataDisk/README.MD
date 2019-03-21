@@ -1,4 +1,3 @@
-Overview
 
 This solution enables the creation of data disks from a snapshot and then attaches the data disks to virtual machine scale set VM instances as part of a scale out operations.  It also supports removing unattached disks which are no longer used when a scale-in operation completes.  
 
