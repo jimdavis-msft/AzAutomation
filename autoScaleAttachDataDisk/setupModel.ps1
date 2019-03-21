@@ -1,28 +1,63 @@
-$vmssName = "vmssModel"
-$resourceGroupName = "_SCRATCH"
+Param(
+    [string] [Parameter(Mandatory=$true)] $ResourceGroupName,
+    [string] [Parameter(Mandatory=$true)] $SubscriptionId,
+    [string] [Parameter(Mandatory=$true)] $VMssName
+)
+
+function Initialize-VMssModel ([string]$Name, [string]$RGName){
+
+    $rg = Get-AzureRmResourceGroup -Name $RGName
+    $vmss = Get-AzureRmVmss -ResourceGroupName $rg.ResourceGroupName -VMScaleSetName $Name
+    $vmss.Overprovision = $false
+    $vmss = Update-AzureRmVmss -VirtualMachineScaleSet $vmss -VMScaleSetName $VMssName -ResourceGroupName $rg.ResourceGroupName
+}
+
+# DETERMINE IF USER IS LOGGED INTO AZURE
+#
+$context = Get-AzureRmContext
+
+if($null -eq $context)
+{
+	Write-Output "Creating credentials for cloud account."
+    $cred = Get-Credential
+	$result = Login-AzureRmAccount -Credential $cred
+    $context = Get-AzureRmContext
+}
+else
+{
+	Write-Output "Session already logged in as $($context.Account.Id)."
+}
+
+# SELECT THE CORRECT AZURE SUBSCRIPTION FOR THE DEPLOYMENT
+#
+if(!($context.Subscription.Id -like "*$($SubscriptionId)*"))
+{
+	Write-Output "Setting Azure Subscription"
+	Select-AzureRmSubscription -Subscription $SubscriptionId
+}
+
+# VERIFY THAT RESOURCE GROUP EXISTS
+$result = Get-AzureRmResource -ResourceGroupName $ResourceGroupName
+
+if($null -eq $result){
+    Write-Output "Resource Group $($ResourceGroupName) does not exist."
+    return 1
+}
 
 
-$rg = Get-AzureRmResourceGroup -Name $resourceGroupName
+# VERIFY THAT TARGET VM SCALESET  EXISTS
+$result = Get-AzureRmVmss -VMScaleSetName $VMssName -ResourceGroupName $ResourceGroupName
 
-$vmss = Get-AzureRmVmss -ResourceGroupName $rg.ResourceGroupName -VMScaleSetName $vmssName
-$vmss.Overprovision = $false
-$vmss = Update-AzureRmVmss -VirtualMachineScaleSet $vmss -VMScaleSetName $vmssName -ResourceGroupName $rg.ResourceGroupName
+if($null -eq $result){
+    Write-Output "VM Scaleset $($VMssName) does not exist."
+    return 1
+}
 
-$vmss.sku.Capacity = 1
-$vmss = Update-AzureRmVmss -VirtualMachineScaleSet $vmss -VMScaleSetName $vmssName -ResourceGroupName $rg.ResourceGroupName
+Write-Output "Initializing VM scale set model."
+Initialize-VMssModel -Name $VMssName -RGName $ResourceGroupName
 
-$vms = Get-AzureRmVmssVM -ResourceGroupName $rg.ResourceGroupName -VMScaleSetName $vmss.Name
-$vmssVM = Get-AzureRmVmssVM -ResourceGroupName $rg.ResourceGroupName -VMScaleSetName $vmss.Name -InstanceId $vms[0].InstanceId
+Write-Output "Done"
 
-$targetDiskName = "mdisk$($vmssVM.InstanceId)"
-$SnapShotSourceDisk = "mdisk0Snap"
-$snapShot = Get-AzureRmSnapshot -ResourceGroupName $rg.ResourceGroupName -SnapshotName $SnapShotSourceDisk
-
-$diskConfig = New-AzureRmDiskConfig -Location $rg.Location -AccountType Premium_LRS -CreateOption Copy -SourceResourceId $snapShot.Id
-$newDisk = New-AzureRmDisk -Disk $diskConfig -ResourceGroupName $rg.ResourceGroupName -DiskName $targetDiskName
-    
-$vmssVM = Add-AzureRmVmssVMDataDisk -VirtualMachineScaleSetVM $vmssVM -Lun 1 -CreateOption Attach -ManagedDiskId $newDisk.Id
-Update-AzureRmVmssVM -VirtualMachineScaleSetVM $vmssVM
 
 
 
