@@ -25,7 +25,7 @@ if($null -eq $context)
 }
 else
 {
-	Write-Output "Session already logged in as $($context.Account.Id)."
+    Write-Output "Session already logged in as $($context.Account.Id)."
 }
 
 # SELECT THE CORRECT AZURE SUBSCRIPTION FOR THE DEPLOYMENT
