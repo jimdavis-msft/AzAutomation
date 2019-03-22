@@ -3,7 +3,6 @@ Param(
     [string] [Parameter(Mandatory=$true)] $SubscriptionId,
     [string] [Parameter(Mandatory=$true)] $VMssName
 )
-
 function Initialize-VMssModel ([string]$Name, [string]$RGName){
 
     $rg = Get-AzureRmResourceGroup -Name $RGName
