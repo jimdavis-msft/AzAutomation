@@ -44,7 +44,6 @@ if($null -eq $result){
     return 1
 }
 
-
 # VERIFY THAT TARGET VM SCALESET  EXISTS
 $result = Get-AzureRmVmss -VMScaleSetName $VMssName -ResourceGroupName $ResourceGroupName
 
@@ -56,8 +55,4 @@ if($null -eq $result){
 Write-Output "Initializing VM scale set model."
 Initialize-VMssModel -Name $VMssName -RGName $ResourceGroupName
 
-Write-Output "Done"
-
-
-
-
+Write-Output "Done!!!"
