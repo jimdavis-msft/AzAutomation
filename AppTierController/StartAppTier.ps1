@@ -1,7 +1,7 @@
+# CREATED BY JIM DAVIS (jimdavis@microsoft.com)
 workflow StartAppTier
 {
-    Param
-    (
+    Param(
         [Parameter(Mandatory=$true)][Int] $Tier,
         [Parameter(Mandatory=$false)][string]$TagName = "autoStart",
         [Parameter(Mandatory=$false)][string]$ConnectionName = "AzureRunAsConnection"
@@ -41,7 +41,7 @@ workflow StartAppTier
     
     Write-Output "Starting resources for tier in parallel."
     Write-Output "Starting Azure VM Scalesets"
-    $vms = Get-AzureRmResource -TagName $TagName -TagValue $TagValue | where {$_.ResourceType -like "Microsoft.Compute/virtualMachineScaleSets"}
+    $vms = Get-AzureRmVmss | Where-Object {$_.Tags[$TagName] -eq $TagValue}
     
     Foreach -Parallel ($vm in $vms){
         Write-Output "Starting VM Scale Set $($vm.Name)";       
@@ -49,7 +49,8 @@ workflow StartAppTier
     }
 
     Write-Output "Starting Azure VMs"
-    $vms = Get-AzureRmResource -TagName $TagName -TagValue $TagValue | where {$_.ResourceType -like "Microsoft.Compute/virtualMachines"}
+    #$vms = Get-AzureRmResource -TagName $TagName -TagValue $TagValue | where {$_.ResourceType -like "Microsoft.Compute/virtualMachines"}
+    $vms = Get-AzureRmVm -Status| Where-Object {$_.Tags[$TagName] -eq $TagValue} | Where-Object {$_.PowerState -eq 'VM deallocated'}
 
     Foreach -Parallel ($vm in $vms){
         Write-Output "Starting VM $($vm.Name)";       

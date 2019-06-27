@@ -1,7 +1,7 @@
+# CREATED BY JIM DAVIS (jimdavis@microsoft.com)
 workflow StopAppTier
 {
-    Param
-    (
+    Param(
         [Parameter(Mandatory=$true)][Int]$Tier,
         [Parameter(Mandatory=$false)][string]$TagName = "autoShutdown",
         [Parameter(Mandatory=$false)][string]$ConnectionName = "AzureRunAsConnection"
@@ -42,7 +42,7 @@ workflow StopAppTier
     Write-Output "Stopping resources in parallel."
 
     Write-Output "Stopping Azure VM Scalesets"
-    $vms = Get-AzureRmResource -TagName $TagName -TagValue $TagValue | where {$_.ResourceType -like "Microsoft.Compute/virtualMachineScaleSets"}
+    #$vms = Get-AzureRmResource -TagName $TagName -TagValue $TagValue | where {$_.ResourceType -like "Microsoft.Compute/virtualMachineScaleSets"}
 
     Foreach -Parallel ($vm in $vms){
         Write-Output "Stopping VM Scale Set $($vm.Name)";       
@@ -50,7 +50,8 @@ workflow StopAppTier
     }
 
     Write-Output "Stopping Azure VMs"
-    $vms = Get-AzureRmResource -TagName $TagName -TagValue $TagValue | where {$_.ResourceType -like "Microsoft.Compute/virtualMachines"}
+    #$vms = Get-AzureRmResource -TagName $TagName -TagValue $TagValue | where {$_.ResourceType -like "Microsoft.Compute/virtualMachines"}
+    $vms = Get-AzureRmVm -Status | Where-Object {$_.Tags[$TagName] -eq $TagValue} | Where-Object {$_.PowerState -eq 'VM running'}
 
     Foreach -Parallel ($vm in $vms){
         Write-Output "Stopping VM $($vm.Name)";       

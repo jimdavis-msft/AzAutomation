@@ -1,10 +1,9 @@
-
+# CREATED BY JIM DAVIS (jimdavis@microsoft.com)
 workflow ShutdownController
 {
-    Param
-    (
+    Param(
         [Parameter(Mandatory=$true)][string]$AutomationAccountName,
-        [Parameter(Mandatory=$true)][string]$ResourceGroupName,
+        [Parameter(Mandatory=$true)][string]$AAResourceGroupName,
         [Parameter(Mandatory=$true)][Int32]$MaxTiers,
         [Parameter(Mandatory=$false)][string]$TagName = "autoShutdown",
         [Parameter(Mandatory=$false)][bool]$ExcludeWeekends = $false,
@@ -14,7 +13,7 @@ workflow ShutdownController
 
     Write-Output "Parameters:"
     Write-Output "AutomationAccountName == $($AutomationAccountName)"
-    Write-Output "ResourceGroupName == $($ResourceGroupName)"
+    Write-Output "AAResourceGroupName == $($AAResourceGroupName)"
     Write-Output "MaxTiers == $($MaxTiers)"
     Write-Output "TagName == $($TagName)"
     Write-Output "ExcludeWeekends == $($ExcludeWeekends)"
@@ -61,19 +60,23 @@ workflow ShutdownController
     Write-Output "Stopping of application tiers is serialized."
 
     # set iterator to 0 to skip shutting down tier 0.  Setting iterator to -1 will ensure all tiers shutdown.
-    for ($i = $MaxTiers - 1; $i -gt -1; $i--)
+    for ($i = $MaxTiers; $i -gt 0; $i--)
     {
         # GET COUNT OF ITEMS IN TIER AND ONLY CALL CHILD RUNBOOK WHEN ITEMS ARE GREATER THAN 0
         [int]$count = 0
 
-        $o = Get-AzureRmResource -TagName $TagName -TagValue $i | where {$_.ResourceType -like "Microsoft.Compute/virtualMachineScaleSets"}
+        #$o = Get-AzureRmResource -TagName $TagName -TagValue $i | where {$_.ResourceType -like "Microsoft.Compute/virtualMachineScaleSets"}
+        $o = Get-AzureRmVmss | where {$_.Tags[$TagName] -eq $i}
+
         if (($null -ne $o) -and ($o.count -gt 0))
         {
             $count = $o.count
         }
 
         $o = $null
-        $o = Get-AzureRmResource -TagName $TagName -TagValue $i | where {$_.ResourceType -like "Microsoft.Compute/virtualMachines"}
+        #$o = Get-AzureRmResource -TagName $TagName -TagValue $i | where {$_.ResourceType -like "Microsoft.Compute/virtualMachines"}
+        $o = Get-AzureRmVm | Where-Object {$_.Tags[$TagName] -eq $i}
+
         if (($null -ne $o) -and ($o.count -gt 0))
         {
             $count = $count + $o.count
@@ -87,10 +90,19 @@ workflow ShutdownController
             {
                 Write-Output "Stopping application tier $($i)."
                 $params = @{"Tier"=$i; "TagName"=$TagName; "ConnectionName"=$ConnectionName}
-                $result = Start-AzureRmAutomationRunbook -AutomationAccountName $AutomationAccountName -Name $ChildRunbookName -ResourceGroupName $ResourceGroupName -Parameters $params -Wait -ErrorAction SilentlyContinue
+                #$result = Start-AzureRmAutomationRunbook -AutomationAccountName $AutomationAccountName -Name $ChildRunbookName -ResourceGroupName $ResourceGroupName -Parameters $params -Wait -ErrorAction SilentlyContinue
+                $result = Start-AzureRmAutomationRunbook -AutomationAccountName $AutomationAccountName -Name $ChildRunbookName -ResourceGroupName $AAResourceGroupName -Parameters $params -Wait -ErrorAction SilentlyContinue
+                Write-Output $result
                 Write-Output "Application tier $($i) stopped."
             }
-            catch {}
+            catch 
+            {
+                Write-Output $_.Exception
+            }
+        }
+        else
+        {
+            "The combined count is $($count) so no job will be invoked for tier $($i)."
         }
     }   
 

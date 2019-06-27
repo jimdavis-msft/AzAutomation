@@ -1,9 +1,9 @@
+# CREATED BY JIM DAVIS (jimdavis@microsoft.com)
 workflow StartupController
 {
-    Param
-    (
+    Param(
         [Parameter(Mandatory=$true)][string]$AutomationAccountName,
-        [Parameter(Mandatory=$true)][string]$ResourceGroupName,
+        [Parameter(Mandatory=$true)][string]$AAResourceGroupName,
         [Parameter(Mandatory=$true)][Int32]$MaxTiers,
         [Parameter(Mandatory=$false)][string]$TagName = "autoStart",
         [Parameter(Mandatory=$false)][bool]$ExcludeWeekends = $false,
@@ -13,7 +13,7 @@ workflow StartupController
 
     Write-Output "Parameters:"
     Write-Output "AutomationAccountName == $($AutomationAccountName)"
-    Write-Output "ResourceGroupName == $($ResourceGroupName)"
+    Write-Output "AAResourceGroupName == $($ResourceGroupName)"
     Write-Output "MaxTiers == $($MaxTiers)"
     Write-Output "TagName == $($TagName)"
     Write-Output "ExcludeWeekends == $($ExcludeWeekends)"
@@ -60,18 +60,21 @@ workflow StartupController
     Write-Output "Start-up for each application tier is serialized."
 
     # iterator varialbe i set to 1 intentionally to skip tier 0.  Normal value would be 0.
-    for ($i=0; $i -lt $MaxTiers - 1; $i++)
+    for ($i=1; $i -lt $MaxTiers + 1; $i++)
     {
         # GET COUNT OF ITEMS IN TIER AND ONLY CALL CHILD RUNBOOK WHEN ITEMS ARE GREATER THAN 0
         [int]$count = 0
 
         $o = Get-AzureRmResource -TagName $TagName -TagValue $i | where {$_.ResourceType -like "Microsoft.Compute/virtualMachineScaleSets"}
+        #Write-Output "There are $($o.count) virtual machine scale sets for tier $($i)."
         if (($null -ne $o) -and ($o.count -gt 0))
         {
             $count = $count + $o.count
         }
 
         $o = Get-AzureRmResource -TagName $TagName -TagValue $i | where {$_.ResourceType -like "Microsoft.Compute/virtualMachines"}
+        #Write-Output "There are $($o.count) virtual machines for tier $($i)."
+
         if (($null -ne $o) -and ($o.count -gt 0))
         {
             $count = $count + $o.count
@@ -85,7 +88,7 @@ workflow StartupController
             {
                 Write-Output "Starting application tier $($i)."
                 $params = @{"Tier"=$i; "TagName"=$TagName; "ConnectionName"=$ConnectionName}
-                $result = Start-AzureRmAutomationRunbook -AutomationAccountName $AutomationAccountName -Name $ChildRunbookName -ResourceGroupName $ResourceGroupName -Parameters $params -Wait -ErrorAction SilentlyContinue
+                $result = Start-AzureRmAutomationRunbook -AutomationAccountName $AutomationAccountName -Name $ChildRunbookName -ResourceGroupName $AAResourceGroupName -Parameters $params -Wait -ErrorAction SilentlyContinue
                 Write-Output "Application tier $($i) started."
             }
             catch {}
