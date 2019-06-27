@@ -13,7 +13,7 @@ workflow StartupController
 
     Write-Output "Parameters:"
     Write-Output "AutomationAccountName == $($AutomationAccountName)"
-    Write-Output "AAResourceGroupName == $($ResourceGroupName)"
+    Write-Output "AAResourceGroupName == $($AAResourceGroupName)"
     Write-Output "MaxTiers == $($MaxTiers)"
     Write-Output "TagName == $($TagName)"
     Write-Output "ExcludeWeekends == $($ExcludeWeekends)"
