@@ -65,8 +65,9 @@ workflow ShutdownController
         # GET COUNT OF ITEMS IN TIER AND ONLY CALL CHILD RUNBOOK WHEN ITEMS ARE GREATER THAN 0
         [int]$count = 0
 
-        #$o = Get-AzureRmResource -TagName $TagName -TagValue $i | where {$_.ResourceType -like "Microsoft.Compute/virtualMachineScaleSets"}
+        $o = $null
         $o = Get-AzureRmVmss | where {$_.Tags[$TagName] -eq $i}
+        Write-Output "There are $($o.count) virtual machine scale sets for tier $($i)."
 
         if (($null -ne $o) -and ($o.count -gt 0))
         {
@@ -74,7 +75,6 @@ workflow ShutdownController
         }
 
         $o = $null
-        #$o = Get-AzureRmResource -TagName $TagName -TagValue $i | where {$_.ResourceType -like "Microsoft.Compute/virtualMachines"}
         $o = Get-AzureRmVm | Where-Object {$_.Tags[$TagName] -eq $i}
 
         if (($null -ne $o) -and ($o.count -gt 0))
@@ -90,7 +90,6 @@ workflow ShutdownController
             {
                 Write-Output "Stopping application tier $($i)."
                 $params = @{"Tier"=$i; "TagName"=$TagName; "ConnectionName"=$ConnectionName}
-                #$result = Start-AzureRmAutomationRunbook -AutomationAccountName $AutomationAccountName -Name $ChildRunbookName -ResourceGroupName $ResourceGroupName -Parameters $params -Wait -ErrorAction SilentlyContinue
                 $result = Start-AzureRmAutomationRunbook -AutomationAccountName $AutomationAccountName -Name $ChildRunbookName -ResourceGroupName $AAResourceGroupName -Parameters $params -Wait -ErrorAction SilentlyContinue
                 Write-Output $result
                 Write-Output "Application tier $($i) stopped."
