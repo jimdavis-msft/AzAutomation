@@ -1,4 +1,3 @@
-# CREATED BY JIM DAVIS (jimdavis@microsoft.com)
 workflow StartupController
 {
     Param(
@@ -36,11 +35,11 @@ workflow StartupController
         $servicePrincipalConnection=Get-AutomationConnection -Name $ConnectionName         
 
         "Logging in to Azure..."
-        Add-AzureRmAccount `
+        Connect-AzAccount `
             -ServicePrincipal `
-            -TenantId $servicePrincipalConnection.TenantId `
             -ApplicationId $servicePrincipalConnection.ApplicationId `
-            -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint 
+            -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint `
+            -Tenant $servicePrincipalConnection.TenantId
     }
     catch {
         if (!$servicePrincipalConnection)
@@ -53,7 +52,7 @@ workflow StartupController
         }
     }
 
-    $result = Select-AzureRmSubscription -SubscriptionId $servicePrincipalConnection.SubscriptionId
+    $result = Select-AzSubscription -SubscriptionId $servicePrincipalConnection.SubscriptionId
     
     Write-Output "Using subsciption $($servicePrincipalConnection.SubscriptionId)"
 
@@ -65,15 +64,16 @@ workflow StartupController
         # GET COUNT OF ITEMS IN TIER AND ONLY CALL CHILD RUNBOOK WHEN ITEMS ARE GREATER THAN 0
         [int]$count = 0
 
-        $o = Get-AzureRmResource -TagName $TagName -TagValue $i | where {$_.ResourceType -like "Microsoft.Compute/virtualMachineScaleSets"}
-        #Write-Output "There are $($o.count) virtual machine scale sets for tier $($i)."
+        $o = Get-AzVmss | where {$_.Tags[$TagName] -eq $i}
+        Write-Output "There are $($o.count) virtual machine scale sets for tier $($i)."
+
         if (($null -ne $o) -and ($o.count -gt 0))
         {
             $count = $count + $o.count
         }
 
-        $o = Get-AzureRmResource -TagName $TagName -TagValue $i | where {$_.ResourceType -like "Microsoft.Compute/virtualMachines"}
-        #Write-Output "There are $($o.count) virtual machines for tier $($i)."
+        $o = Get-AzVm | Where-Object {$_.Tags[$TagName] -eq $i}
+        Write-Output "There are $($o.count) virtual machines for tier $($i)."
 
         if (($null -ne $o) -and ($o.count -gt 0))
         {

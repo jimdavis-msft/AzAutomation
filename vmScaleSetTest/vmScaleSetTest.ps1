@@ -1,7 +1,7 @@
 param(
-    [string] $vmssName = "vmss",
-    [string] $resourceGroupName = "staplestest",
-    [string] $autoScaleRuleName = "cpuautoscalevmssgb4wy"
+    [string] $vmssName,
+    [string] $resourceGroupName,
+    [string] $autoScaleRuleName
 )
 
 Function Set-ScaleRuleCount ([string]$rgName, [string]$vmssName, [int] $n)
