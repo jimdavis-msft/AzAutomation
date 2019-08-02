@@ -1,7 +1,7 @@
 param(
-    [string] $vmssName,
-    [string] $resourceGroupName,
-    [string] $autoScaleRuleName
+    [Parameter(Mandatory=$True)][string] $vmssName,
+    [Parameter(Mandatory=$True)][string] $resourceGroupName,
+    [Parameter(Mandatory=$True)][string] $autoScaleRuleName
 )
 
 Function Set-ScaleRuleCount ([string]$rgName, [string]$vmssName, [int] $n)
