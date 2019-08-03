@@ -76,18 +76,17 @@ if ($iCount -ne $autoscaleMin){
 # SET THE NUMBER OF INSTANCES THAT SHOULD BE DELETED HERE
 $n = 1
 Write-Host "Deleting $($n) instance(s)." -ForegroundColor $color
-Remove-VmssInstances -resourceGroupName $vmss.resourceGroup -vmssName $vmss.name -count $n
-Wait-ScalingOperation -count ($autoscaleMin - $n)
+#Remove-VmssInstances -resourceGroupName $vmss.resourceGroup -vmssName $vmss.name -count $n
+#Wait-ScalingOperation -count ($autoscaleMin - $n)
 
 # WAIT FOR AUTOSCALE RULE TO FORCE COUNT BACK TO TARGET
 Write-Host "Waiting for autoscale rule to force instance count to $($autoscaleMin)." -ForegroundColor $color
-Wait-ScalingOperation -count ($autoscaleMin)
+#Wait-ScalingOperation -count ($autoscaleMin)
 
 # FORCE A SCALE OUT OPERATION
 $n = ([int]$autoscaleMin + 1)
 Write-Host "Forcing autoscaling event to require $($n) instances." -ForegroundColor $color
 Force-ScaleOperation -rgName $vmss.resourceGroup -vmssName $vmss.name -count $n
-Wait-ScalingOperation -count $n
 
 # WAIT FOR AUTOSCALE RULE TO FORCE COUNT BACK TO TARGET
 Write-Host "Waiting for autoscale rule to force instance count to $($autoscaleMin)." -ForegroundColor $color
