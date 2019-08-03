@@ -22,7 +22,7 @@ Function Wait-ScalingOperation ([int] $count){
 
     [bool]$bContinue = $True
     while ($bContinue){
-        $c = Get-InstanceCount -resourceGroupName $vmss.resourceGroup -name $vmss.name
+        $c = Get-InstanceCount -resourceGroupName $vmss.resourceGroup -vmssName $vmss.name
         $waitTime = 15
         if ($c -ne $count){
             Write-Host "Current instance count is $($c) but waiting for $($count).  Waiting for $($waitTime) seconds."
