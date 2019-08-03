@@ -14,6 +14,7 @@ Function Force-ScaleOperation ([string]$rgName, [string]$vmssName, [int] $count)
 }
 
 Function Get-InstanceCount ($resourceGroupName, $vmssName){
+    #return ((az vmss list-instances -g $vmss.resourceGroup --name $vmss.name | ConvertFrom-Json) | Where-Object -Property provisioningState -eq "Succeeded").count
     return ((az vmss list-instances -g $resourceGroupName --name $vmssName | ConvertFrom-Json)).count
 }
 
@@ -21,8 +22,7 @@ Function Wait-ScalingOperation ([int] $count){
 
     [bool]$bContinue = $True
     while ($bContinue){
-        #$count =  ((az vmss list-instances -g $vmss.resourceGroup --name $vmss.name | ConvertFrom-Json) | Where-Object -Property provisioningState -eq "Succeeded").count
-        $c =  ((az vmss list-instances -g $vmss.resourceGroup --name $vmss.name | ConvertFrom-Json)).count
+        $c = Get-InstanceCount -resourceGroupName $vmss.resourceGroup -name $vmss.name
         $waitTime = 15
         if ($c -ne $count){
             Write-Host "Current instance count is $($c) but waiting for $($count).  Waiting for $($waitTime) seconds."
