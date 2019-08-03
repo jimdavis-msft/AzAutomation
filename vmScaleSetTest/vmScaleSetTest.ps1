@@ -14,7 +14,7 @@ Function Force-ScaleOperation ([string]$rgName, [string]$vmssName, [int] $count)
 }
 
 Function Get-InstanceCount ($resourceGroupName, $vmssName){
-    #return ((az vmss list-instances -g $vmss.resourceGroup --name $vmss.name | ConvertFrom-Json) | Where-Object -Property provisioningState -eq "Succeeded").count
+    #return ((az vmss list-instances -g $resourceGroupName --name $vmssName | ConvertFrom-Json) | Where-Object -Property provisioningState -eq "Succeeded").count
     return ((az vmss list-instances -g $resourceGroupName --name $vmssName | ConvertFrom-Json)).count
 }
 
