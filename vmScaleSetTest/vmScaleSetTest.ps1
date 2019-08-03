@@ -105,25 +105,26 @@ $autoscaleMin = $r.profiles.capacity.minimum
 Wait-ScalingOperation -count $autoscaleMin
 
 # UPDATE AUTOSCALE RULE TO 1 INSTANCE
+[int] $n = 1
 Write-Host "Setting autoscaling rule to require 1 instance." -ForegroundColor $color
-Set-ScaleRuleCount -rgName $vmss.resourceGroup -name $autoScaleRuleName -count 1
+Set-ScaleRuleCount -rgName $vmss.resourceGroup -name $autoScaleRuleName -count $n
 # REFRESH AUTOSCALE OBJECT AND GET NEW MIN VALUE
 $r = az monitor autoscale show -g $vmss.resourceGroup --name $autoScaleRuleName | ConvertFrom-Json
 $autoscaleMin = $r.profiles.capacity.minimum
 
 # WAIT FOR AUTOSCALE RULE TO FORCE COUNT BACK TO TARGET
-Wait-ScalingOperation -count [int]$autoscaleMin
+Wait-ScalingOperation -count $autoscaleMin
 
 $vmss = az vmss show -g $vmss.resourceGroup --name $vmssName| ConvertFrom-json
 Write-Host "Current capacity for VM Scaleset $($vmss.name) is $($vmss.sku.capacity)." -ForegroundColor $color
 
 # SET AUTOSCALE RULE MIN BACK TO STARTING VALUE
 Write-Host "Setting autoscale rule back to staring minimum value of $($autoscaleStart)." -ForegroundColor $color
-Set-ScaleRuleCount -rgName $vmss.resourceGroup -name $autoScaleRuleName -count [int]$autoscaleStart
+Set-ScaleRuleCount -rgName $vmss.resourceGroup -name $autoScaleRuleName -count $autoscaleStart
 
 # REFRESH AUTOSCALE OBJECT AND GET NEW MIN VALUE
 $r = az monitor autoscale show -g $vmss.resourceGroup --name $autoScaleRuleName | ConvertFrom-Json
 $autoscaleMin = $r.profiles.capacity.minimum
 
 # WAIT FOR AUTOSCALE RULE TO FORCE COUNT BACK TO TARGET
-Wait-ScalingOperation -count [int]$autoscaleMin
+Wait-ScalingOperation -count $autoscaleMin
