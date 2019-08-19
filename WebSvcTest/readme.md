@@ -1,0 +1,1 @@
+The WebTest.ps1 script file is an example for getting a bearer token from Azure Active Directory for a registered application and then calling a web service API to validate the service is running.
