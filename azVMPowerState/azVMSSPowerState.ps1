@@ -3,5 +3,6 @@ $i = az vmss list-instances --resource-group $o[0].resourceGroup --name $o[0].na
 
 foreach ($_ in $i)
 {
-    Write-Host $_
+   $vmi = az vmss get-instance-view --name $o[0].name --resource-group $o[0].resourceGroup --instance-id $_.instanceId | ConvertFrom-Json
+   Write-Host $vmi.statuses[0].displayStatus
 }
