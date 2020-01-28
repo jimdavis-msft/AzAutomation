@@ -89,51 +89,5 @@ function Get-AzureRmBearerToken()
     ('Bearer {0}' -f (Get-AzureRmCachedAccessToken))
 }
 
-Function Set-ScaleRuleCount ([string]$rgName, [string]$name, [int] $count)
-{
-    $out = az monitor autoscale update -g $rgName --name $name --count $count
-}
-Function Force-ScaleOperation ([string]$rgName, [string]$vmssName, [int] $count)
-{
-    $out = az vmss scale -g $rgName --name $vmssName --new-capacity $count
-}
-
-Function Get-InstanceCount ($resourceGroupName, $vmssName){
-    #return ((az vmss list-instances -g $resourceGroupName --name $vmssName | ConvertFrom-Json) | Where-Object -Property provisioningState -eq "Succeeded").count
-    return ((az vmss list-instances -g $resourceGroupName --name $vmssName | ConvertFrom-Json)).count
-}
-
-Function Wait-ScalingOperation ([int] $count){
-
-    [bool]$bContinue = $True
-    while ($bContinue){
-        $c = Get-InstanceCount -resourceGroupName $vmss.resourceGroup -vmssName $vmss.name
-        $waitTime = 15
-        if ($c -ne $count){
-            Write-Host "Current instance count is $($c) but waiting for $($count).  Waiting for $($waitTime) seconds."
-            Start-Sleep $waitTime
-        }
-        else
-        {
-            $bContinue = $False
-            Write-Host "Current instance count is $($c). "
-        }
-    }
-}
-Function Remove-VmssInstances ([string]$resourceGroupName, [string] $vmssName, [int]$count){
-    $instances =  ((az vmss list-instances -g $vmss.resourceGroup --name $vmss.name | ConvertFrom-Json) | Where-Object -Property "provisioningState" -eq "Succeeded")
-
-    if (($instances.count - $count) -gt 0){
-        for ([int]$i = 0; $i -lt $count; $i++){
-            $out = az vmss delete-instances -g $resourceGroupName --name $vmssName --instance-ids $instances[$i].instanceId --no-wait
-        }        
-    }
-    else{
-        Write-Host "Cannot remove $($count) instance(s) from scalset $($vmssName) as it has $($result.count) instance(s) in a Succeeded state." -ForegroundColor Red
-        exit
-    }
-}
-
 $o = Get-VMSSAll -TagName ProjCode -TagValue Default
-
 Write-Host "There are $($o.count) VM scale sets in the subscription."
