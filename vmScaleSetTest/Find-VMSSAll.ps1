@@ -13,8 +13,9 @@ Function Get-VMSSAll([string]$TagName, [string]$TagValue)
 
     $token = Get-AzCachedAccessToken
 
-    $o = ((Invoke-WebRequest -Uri "https://management.azure.com/subscriptions/$($currentAzContext.Subscription.Id)/providers/Microsoft.Compute/virtualMachineScaleSets?api-version=2019-03-01"  -Method GET -Headers @{Authorization="Bearer $($token)"}).content | ConvertFrom-Json)
-
+    #$o = ((Invoke-WebRequest -Uri "https://management.azure.com/subscriptions/$($currentAzContext.Subscription.Id)/providers/Microsoft.Compute/virtualMachineScaleSets?api-version=2019-03-01"  -Method GET -Headers @{Authorization="Bearer $($token)"}).content | ConvertFrom-Json)
+    $o = (curl https://management.azure.com/subscriptions/$($currentAzContext.Subscription.Id)/providers/Microsoft.Compute/virtualMachineScaleSets?api-version=2019-03-01 -s -H "Authorization: Bearer $($token)") | ConvertFrom-Json
+    
     foreach ($_ in $o)
     {
         if ($_.value.tags.$TagName -eq $TagValue)
